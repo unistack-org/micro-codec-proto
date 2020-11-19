@@ -13,6 +13,22 @@ type Codec struct {
 	Conn io.ReadWriteCloser
 }
 
+func (c *Codec) Marshal(v interface{}) ([]byte, error) {
+	m, ok := v.(proto.Message)
+	if !ok {
+		return nil, codec.ErrInvalidMessage
+	}
+	return proto.Marshal(m)
+}
+
+func (c *Codec) Unmarshal(data []byte, v interface{}) error {
+	m, ok := v.(proto.Message)
+	if !ok {
+		return codec.ErrInvalidMessage
+	}
+	return proto.Unmarshal(data, m)
+}
+
 func (c *Codec) ReadHeader(m *codec.Message, t codec.MessageType) error {
 	return nil
 }
