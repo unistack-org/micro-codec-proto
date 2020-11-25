@@ -13,6 +13,9 @@ import (
 type protoCodec struct{}
 
 func (c *protoCodec) Marshal(v interface{}) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
 	switch m := v.(type) {
 	case *codec.Frame:
 		return m.Data, nil
@@ -25,7 +28,7 @@ func (c *protoCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (c *protoCodec) Unmarshal(d []byte, v interface{}) error {
-	if d == nil {
+	if d == nil || v == nil {
 		return nil
 	}
 	switch m := v.(type) {
