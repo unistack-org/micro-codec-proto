@@ -44,11 +44,11 @@ func (c *protoCodec) Unmarshal(d []byte, v interface{}) error {
 	return codec.ErrInvalidMessage
 }
 
-func (c *protoCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.MessageType) error {
+func (c *protoCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
 	return nil
 }
 
-func (c *protoCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
+func (c *protoCodec) ReadBody(conn io.Reader, b interface{}) error {
 	switch m := b.(type) {
 	case nil:
 		return nil
@@ -75,7 +75,7 @@ func (c *protoCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 	return codec.ErrInvalidMessage
 }
 
-func (c *protoCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{}) error {
+func (c *protoCodec) Write(conn io.Writer, m *codec.Message, b interface{}) error {
 	switch m := b.(type) {
 	case nil:
 		return nil
