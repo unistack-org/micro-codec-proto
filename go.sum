@@ -29,8 +29,6 @@ github.com/imdario/mergo v0.3.11/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/patrickmn/go-cache v2.1.0+incompatible/go.mod h1:3Qf8kWWT7OJRJbdiICTKqZju1ZixQ/KpMGzzAfe6+WQ=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/silas/dag v0.0.0-20210121180416-41cf55125c34/go.mod h1:7RTUFBdIRC9nZ7/3RyRNH1bdqIShrDejd1YbLwgPS+I=
-github.com/unistack-org/micro-proto v0.0.2-0.20210307161332-120b8d428313 h1:6BWhJJPVlsvkll5GLtxyQgvyZJDnYLEn2FuSoNmtZ4A=
-github.com/unistack-org/micro-proto v0.0.2-0.20210307161332-120b8d428313/go.mod h1:GYO53DWmeldRIo90cAdQx8bLr/WJMxW62W4ja74p1Ac=
 github.com/unistack-org/micro/v3 v3.2.20 h1:EY94FDfHR43QvKNjmCaVH8/7+D8bmLwySXbFK9iIQY0=
 github.com/unistack-org/micro/v3 v3.2.20/go.mod h1:y+fV+BPNK2IqGoLquRU396jTYifG0HCw3zxFfI4E0dc=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
