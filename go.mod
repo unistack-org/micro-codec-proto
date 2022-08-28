@@ -4,5 +4,5 @@ go 1.16
 
 require (
 	go.unistack.org/micro/v3 v3.9.11
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/protobuf v1.28.1
 )
