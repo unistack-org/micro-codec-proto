@@ -1,23 +1,35 @@
 // Package proto provides a proto codec
-package proto // import "go.unistack.org/micro-codec-proto/v3"
+package proto
 
 import (
-	"io"
-
 	pb "go.unistack.org/micro-proto/v3/codec"
 	"go.unistack.org/micro/v3/codec"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 	"google.golang.org/protobuf/proto"
 )
 
+var (
+	DefaultMarshalOptions = proto.MarshalOptions{
+		AllowPartial: false,
+	}
+
+	DefaultUnmarshalOptions = proto.UnmarshalOptions{
+		DiscardUnknown: false,
+		AllowPartial:   false,
+	}
+)
+
 type protoCodec struct {
 	opts codec.Options
 }
 
-var _ codec.Codec = &protoCodec{}
+type protoCodecV2 struct {
+	opts codec.Options
+}
 
-const (
-	flattenTag = "flatten"
+var (
+	_ codec.Codec   = (*protoCodec)(nil)
+	_ codec.CodecV2 = (*protoCodecV2)(nil)
 )
 
 func (c *protoCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error) {
@@ -30,8 +42,10 @@ func (c *protoCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error
 		o(&options)
 	}
 
-	if nv, nerr := rutil.StructFieldByTag(v, options.TagName, flattenTag); nerr == nil {
-		v = nv
+	if options.Flatten {
+		if nv, nerr := rutil.StructFieldByTag(v, options.TagName, "flatten"); nerr == nil {
+			v = nv
+		}
 	}
 
 	switch m := v.(type) {
@@ -39,13 +53,17 @@ func (c *protoCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error
 		return m.Data, nil
 	case *pb.Frame:
 		return m.Data, nil
-	}
-
-	if _, ok := v.(proto.Message); !ok {
+	case proto.Message:
+		marshalOptions := DefaultMarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(marshalOptionsKey{}).(proto.MarshalOptions); ok {
+				marshalOptions = f
+			}
+		}
+		return marshalOptions.Marshal(m)
+	default:
 		return nil, codec.ErrInvalidMessage
 	}
-
-	return proto.Marshal(v.(proto.Message))
 }
 
 func (c *protoCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) error {
@@ -58,8 +76,10 @@ func (c *protoCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) er
 		o(&options)
 	}
 
-	if nv, nerr := rutil.StructFieldByTag(v, options.TagName, flattenTag); nerr == nil {
-		v = nv
+	if options.Flatten {
+		if nv, nerr := rutil.StructFieldByTag(v, options.TagName, "flatten"); nerr == nil {
+			v = nv
+		}
 	}
 
 	switch m := v.(type) {
@@ -69,46 +89,17 @@ func (c *protoCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) er
 	case *pb.Frame:
 		m.Data = d
 		return nil
-	}
-
-	if _, ok := v.(proto.Message); !ok {
+	case proto.Message:
+		unmarshalOptions := DefaultUnmarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(marshalOptionsKey{}).(proto.UnmarshalOptions); ok {
+				unmarshalOptions = f
+			}
+		}
+		return unmarshalOptions.Unmarshal(d, m)
+	default:
 		return codec.ErrInvalidMessage
 	}
-
-	return proto.Unmarshal(d, v.(proto.Message))
-}
-
-func (c *protoCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
-	return nil
-}
-
-func (c *protoCodec) ReadBody(conn io.Reader, v interface{}) error {
-	if v == nil {
-		return nil
-	}
-
-	buf, err := io.ReadAll(conn)
-	if err != nil {
-		return err
-	} else if len(buf) == 0 {
-		return nil
-	}
-	return c.Unmarshal(buf, v)
-}
-
-func (c *protoCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
-	if v == nil {
-		return nil
-	}
-
-	buf, err := c.Marshal(v)
-	if err != nil {
-		return err
-	} else if len(buf) == 0 {
-		return codec.ErrInvalidMessage
-	}
-	_, err = conn.Write(buf)
-	return err
 }
 
 func (c *protoCodec) String() string {
@@ -117,4 +108,82 @@ func (c *protoCodec) String() string {
 
 func NewCodec(opts ...codec.Option) codec.Codec {
 	return &protoCodec{opts: codec.NewOptions(opts...)}
+}
+
+func (c *protoCodecV2) Marshal(d []byte, v interface{}, opts ...codec.Option) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
+
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if options.Flatten {
+		if nv, nerr := rutil.StructFieldByTag(v, options.TagName, "flatten"); nerr == nil {
+			v = nv
+		}
+	}
+
+	switch m := v.(type) {
+	case *codec.Frame:
+		return m.Data, nil
+	case *pb.Frame:
+		return m.Data, nil
+	case proto.Message:
+		marshalOptions := DefaultMarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(marshalOptionsKey{}).(proto.MarshalOptions); ok {
+				marshalOptions = f
+			}
+		}
+		return marshalOptions.MarshalAppend(d, m)
+	default:
+		return nil, codec.ErrInvalidMessage
+	}
+}
+
+func (c *protoCodecV2) Unmarshal(d []byte, v interface{}, opts ...codec.Option) error {
+	if v == nil || len(d) == 0 {
+		return nil
+	}
+
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if options.Flatten {
+		if nv, nerr := rutil.StructFieldByTag(v, options.TagName, "flatten"); nerr == nil {
+			v = nv
+		}
+	}
+
+	switch m := v.(type) {
+	case *codec.Frame:
+		m.Data = d
+		return nil
+	case *pb.Frame:
+		m.Data = d
+		return nil
+	case proto.Message:
+		unmarshalOptions := DefaultUnmarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(marshalOptionsKey{}).(proto.UnmarshalOptions); ok {
+				unmarshalOptions = f
+			}
+		}
+		return unmarshalOptions.Unmarshal(d, m)
+	default:
+		return codec.ErrInvalidMessage
+	}
+}
+
+func (c *protoCodecV2) String() string {
+	return "proto"
+}
+
+func NewCodecV2(opts ...codec.Option) codec.CodecV2 {
+	return &protoCodecV2{opts: codec.NewOptions(opts...)}
 }
