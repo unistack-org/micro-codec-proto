@@ -61,6 +61,10 @@ func (c *protoCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error
 			}
 		}
 		return marshalOptions.Marshal(m)
+	case codec.RawMessage:
+		return []byte(m), nil
+	case *codec.RawMessage:
+		return []byte(*m), nil
 	default:
 		return nil, codec.ErrInvalidMessage
 	}
@@ -97,6 +101,12 @@ func (c *protoCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) er
 			}
 		}
 		return unmarshalOptions.Unmarshal(d, m)
+	case *codec.RawMessage:
+		*m = append((*m)[0:0], d...)
+		return nil
+	case codec.RawMessage:
+		copy(m, d)
+		return nil
 	default:
 		return codec.ErrInvalidMessage
 	}
