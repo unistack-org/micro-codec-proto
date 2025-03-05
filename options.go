@@ -1,7 +1,7 @@
 package proto
 
 import (
-	codec "go.unistack.org/micro/v3/codec"
+	codec "go.unistack.org/micro/v4/codec"
 	"google.golang.org/protobuf/proto"
 )
 
