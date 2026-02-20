@@ -2,6 +2,7 @@ package proto
 
 import (
 	codec "go.unistack.org/micro/v4/codec"
+	"google.golang.org/grpc/mem"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -15,4 +16,10 @@ type marshalOptionsKey struct{}
 
 func MarshalOptions(o proto.MarshalOptions) codec.Option {
 	return codec.SetOption(marshalOptionsKey{}, o)
+}
+
+type memBufferPoolKey struct{}
+
+func BufferPool(p mem.BufferPool) codec.Option {
+	return codec.SetOption(memBufferPoolKey{}, p)
 }
